@@ -438,9 +438,9 @@ int respawn_creatures(int rows, int cols, char (* map)[cols])
 			}
 			else
 			{
-				monster[m].type = rand() % dlvl + 97;
-				if (dlvl == 1 && !(rand() % 3))
-					monster[m].type += rand() % 2;
+				monster[m].type = rand() % (dlvl + 1) + 97;
+				if (rand() % 2 && dlvl != 1)
+					monster[m].type += 1;
 				monster[m].awake = 0;
 			}
 
@@ -739,7 +739,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols])
 	turns++;
 	
 	// satiation
-	if (!(turns % 75))
+	if (!(turns % 50) && hp > 1)
 		hp--;
 
 	if (c == 'n' || hp < 1)
