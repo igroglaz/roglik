@@ -40,7 +40,7 @@ struct monsters
 
 struct monsters monster[20];
 
-int dungeon_draw(int rows, int cols, char (* map)[cols])
+int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
 	move(1, 0);
 	clrtobot();
@@ -50,25 +50,30 @@ int dungeon_draw(int rows, int cols, char (* map)[cols])
     {
         for (int x = 0; x <= cols; x++)
         {
-			// fog of war
-			/*
-			if (y < py - 3 || y > py + 3 ||
-				x < px - 5 || x > px + 5)
-				continue;
-			*/
-
             if (y == rows)
                 mvaddch(y,x,' ');
-            else if (map[y][x] == '>')
+			// objects can be visible only on empty floor
+            else if (map[y][x] == ' ')
 			{
-				attron(A_BOLD);
-                mvaddch(y,x,'>');
-				attroff(A_BOLD);
+				if (obj[y][x] == '>')
+				{
+					attron(A_BOLD);
+					mvaddch(y,x,'>');
+					attroff(A_BOLD);
+				}
+				// traps (can be seen only in close distance)
+				else if (obj[y][x] == '^' && ((y > py - 5 && x > px - 5) &&
+				(y < py + 5 && x < px + 5)))
+				{
+					attron(A_BOLD | COLOR_PAIR(YELLOW));
+					mvaddch(y,x,'^');
+					attroff(A_BOLD | COLOR_PAIR(YELLOW));
+				}
+				else
+					mvaddch(y,x,' ');
 			}
             else if (map[y][x] == '%' && y != 0)
                 mvaddch(y,x,'%');
-            else if (map[y][x] == ' ')
-                mvaddch(y,x,' ');
             else if (map[y][x] == '#')
                 mvaddch(y,x,'#');
             else if (map[y][x] == '~')
@@ -77,7 +82,8 @@ int dungeon_draw(int rows, int cols, char (* map)[cols])
                 mvaddch(y,x,'~');
 				standend();
 			}
-            else if (map[y][x] == 't')
+            else if (map[y][x] == 't' && ((y > py - 5 && x > px - 5) &&
+				(y < py + 5 && x < px + 5)))
             {
 				for (int m = 0; m < 10 + dlvl / 2; m++)
 				{
@@ -296,7 +302,7 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
 	return 0;
 }
 
-int p_action(int c, int rows, int cols, char (* map)[cols])
+int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
 	int dir_y = py, dir_x = px;
 	
@@ -309,7 +315,7 @@ int p_action(int c, int rows, int cols, char (* map)[cols])
 	else if (c == KEY_RIGHT || c == 'd' || c == 'l')
 		dir_x++;
 	// go down
-	else if ((c == '>' || c == '\r' || c == '\n' || c == KEY_ENTER || c == ' ') && map[py][px] == '>')
+	else if ((c == '>' || c == '\r' || c == '\n' || c == KEY_ENTER || c == ' ') && obj[py][px] == '>')
 	{
 		t_placed = 0;
 		p_placed = 0;
@@ -326,7 +332,7 @@ int p_action(int c, int rows, int cols, char (* map)[cols])
             py = rand() % rows;
             px = rand() % cols;
         }
-        while (map[py][px] != ' ');
+        while (map[py][px] != ' ' && obj[py][px] == ' ');
 
 		return 2;
 	}
@@ -389,7 +395,7 @@ int p_action(int c, int rows, int cols, char (* map)[cols])
 		return 3;
 	}
 
-	if (map[dir_y][dir_x] == ' ' || map[dir_y][dir_x] == '>')
+	if (map[dir_y][dir_x] == ' ')
 	{
 		py = dir_y;
 		px = dir_x;
@@ -400,7 +406,81 @@ int p_action(int c, int rows, int cols, char (* map)[cols])
 	return 0;
 }
 
-int respawn_creatures(int rows, int cols, char (* map)[cols])
+// + spawn player separately... to add dist to stairs
+
+int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols], int new_lvl)
+{
+	if (new_lvl == 1 || turns == 1)
+	{
+        // fill dungeon with empty obj
+        for (int y = 0; y <= rows; y++)
+        {
+            for (int x = 0; x <= cols; x++)
+            {              
+                obj[y][x] = ' ';
+            }
+        }
+		
+		// staircase gen
+		int final_lvl = 13 + rand() % 2;
+		
+		if (dlvl != final_lvl)
+		{
+			do
+			{
+				sy = rand() % rows;
+				sx = rand() % cols;
+			}
+			while (map[sy][sx] != ' ');
+			obj[sy][sx] = '>';
+		}
+		// lava (not obj, but terrain.. anyway, lets put it there :)
+		else
+		{
+			int ly, lx;
+			do
+			{
+				ly = rand() % rows;
+				lx = rand() % cols;
+			}
+			while (map[ly][lx] != ' ');
+			map[ly][lx] = '~';
+			
+			for (int i = 0; i < 33; i++)
+			{
+				// if lava not crossed regular terrain
+				if (map[ly][lx] == '%')
+					i = 32;
+
+				if (rand() % 2)
+					map[ly--][lx] = '~';
+				else
+					map[ly][lx++] = '~';
+			}
+		}
+	}
+
+	// each turn there is a chance to spawn trap (the faster you run away - the better)
+	if ((rand() % (16 - dlvl)))
+	{
+		int y, x;
+
+		do
+		{
+			y = rand() % rows;
+			x = rand() % cols;
+		}
+		while (map[y][x] != ' ' && obj[y][x] != ' ');
+		
+		// treasure?
+		if (rand() % 2)
+			obj[y][x] = '^';
+	}
+	
+	return 0;
+}
+
+int spawn_creatures(int rows, int cols, char (* map)[cols])
 {
     if (!t_placed) // aka: t_placed == 0
     {
@@ -596,52 +676,12 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
                 }
             }
         }
-		
-		// staircase gen
-		int final_lvl = 13 + rand() % 2;
-		
-		if (dlvl != final_lvl)
-		{
-			do
-			{
-				sy = rand() % rows;
-				sx = rand() % cols;
-			}
-			while (map[sy][sx] != ' ');
-			map[sy][sx] = '>';
-		}
-		// lava
-		else
-		{
-			int ly, lx;
-			do
-			{
-				ly = rand() % rows;
-				lx = rand() % cols;
-			}
-			while (map[ly][lx] != ' ');
-			map[ly][lx] = '~';
-			
-			for (int i = 0; i < 33; i++)
-			{
-				if (map[ly][lx] == '%')
-					i = 32;
-				if (rand() % 2)
-				{
-					map[ly--][lx] = '~';
-				}
-				else
-				{
-					map[ly][lx++] = '~';
-				}
-			}
-		}
     }
 	
 	return 0;
 }
 
-int game_loop(int c, int rows, int cols, char (* map)[cols])
+int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
 	int new_lvl = 0;
 	int killer = 0;
@@ -652,16 +692,18 @@ int game_loop(int c, int rows, int cols, char (* map)[cols])
     
 	dungeon_gen(rows, cols, map);
 
-	respawn_creatures(rows, cols, map);
+	spawn_creatures(rows, cols, map);
 
 	if (c != 0)
 	{
-		new_lvl = p_action(c, rows, cols, map); // +battle()
+		new_lvl = p_action(c, rows, cols, map, obj); // +battle()
 	}
+
+	spawn_objects(rows, cols, map, obj, new_lvl);
 
 	killer = monster_turn(cols, map);
 
-	dungeon_draw(rows, cols, map);
+	dungeon_draw(rows, cols, map, obj);
 
 	// new lvl
 	if (new_lvl == 1)
@@ -669,8 +711,9 @@ int game_loop(int c, int rows, int cols, char (* map)[cols])
 		dlvl++;
 		hp += dlvl;
 		dungeon_gen(rows, cols, map);
-		respawn_creatures(rows, cols, map);
-		dungeon_draw(rows, cols, map);
+		spawn_creatures(rows, cols, map);
+		spawn_objects(rows, cols, map, obj, new_lvl);
+		dungeon_draw(rows, cols, map, obj);
 	}
 	// teleport
 	else if (new_lvl == 2)
@@ -706,6 +749,12 @@ int game_loop(int c, int rows, int cols, char (* map)[cols])
 		}
 	}
 	
+	// player stept over trap
+	if (obj[py][px] == '^')
+	{
+		hp -= dlvl / 2 + 1;
+	}
+	
 	if (hp < 1)
 	{
 		while (1)
@@ -739,7 +788,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols])
 	turns++;
 	
 	// satiation
-	if (!(turns % 50) && hp > 1)
+	if (!(turns % 50 - (dlvl * 2)) && hp > 1)
 		hp--;
 
 	if (c == 'n' || hp < 1)
@@ -787,6 +836,7 @@ int main(void)
 	cols = 80;
     
     char map[rows][cols]; // 0..119
+    char obj[rows][cols]; // 0..119
 
 	printw("\n\n\n\n");
 	attron(A_BOLD);
@@ -825,7 +875,7 @@ int main(void)
     do
     {
 		// rows-1 cause map[][] 0.. 119
-        c = game_loop(c, rows - 1, cols - 1, map);
+        c = game_loop(c, rows - 1, cols - 1, map, obj);
 		if (c == 27)
 		{
 			endwin();
