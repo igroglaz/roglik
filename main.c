@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include <string.h> // strcmp()
 
 #define RED 1
 #define GREEN 2
@@ -21,6 +22,7 @@ int r_placed = 0;
 int dlvl = 1;
 int turns = 1;
 int m_defeated = 0;
+char state[5] = {0}; // conf, pois, blee etc
 
 // sneakiness
 // stasis
@@ -311,13 +313,41 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 	
 	int dir_y = py, dir_x = px;
 	
-	if      (c == KEY_UP || c == 'w' || c == 'k')
+	// remap macro for movement
+	if      (c == 'w' || c == 'k')
+		c = KEY_UP;
+	else if (c == 's' || c == 'j')
+		c = KEY_DOWN;
+	else if (c == 'a' || c == 'h')
+		c = KEY_LEFT;
+	else if (c == 'd' || c == 'l')
+		c = KEY_RIGHT;
+	
+	// confusion
+	if (!strcmp(state, "conf"))
+	{
+		if (c == KEY_UP || c == KEY_DOWN || c == KEY_LEFT || c == KEY_RIGHT)
+		{
+			int rng = rand() % 4;
+
+			if (rng == 0)
+				c = KEY_UP;
+			else if (rng == 1)
+				c = KEY_DOWN;
+			else if (rng == 2)
+				c = KEY_LEFT;
+			else if (rng == 3)
+				c = KEY_RIGHT;
+		}
+	}
+	
+	if      (c == KEY_UP)
 		dir_y--;
-	else if (c == KEY_DOWN || c == 's' || c == 'j')
+	else if (c == KEY_DOWN)
 		dir_y++;
-	else if (c == KEY_LEFT || c == 'a' || c == 'h')
+	else if (c == KEY_LEFT)
 		dir_x--;
-	else if (c == KEY_RIGHT || c == 'd' || c == 'l')
+	else if (c == KEY_RIGHT)
 		dir_x++;
 	// go down
 	else if ((c == '>' || c == '\r' || c == '\n' || c == KEY_ENTER || c == ' ') && obj[py][px] == '>')
@@ -747,9 +777,27 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 	// player stept over trap
 	if (obj[py][px] == '^')
 	{
-		mvprintw(0, 0, " You've stepped into a trap...");
-		hp -= dlvl / 2 + 1;
+		attron(A_BOLD | COLOR_PAIR(YELLOW));
+		mvprintw(rows, cols - 10, "[Trap]");
+		attroff(A_BOLD | COLOR_PAIR(YELLOW));
+		
+		if (rand() % 2)
+		{
+			mvprintw(0, 0, " You've stepped into a trap... dart hits you!");
+			hp -= dlvl / 2 + 1;
+		}
+		else
+		{
+			mvprintw(0, 0, " You've stepped into a trap... you are confused!");
+			strncpy(state, "conf\0", 5);
+		}
 	}
+	
+	// process state
+	if (!strcmp(state, "conf") && rand() % 2)
+		strncpy(state, "\0\0\0\0\0", 5);
+	else
+		mvprintw(rows, cols - 20, "conf");
 	
 	// RIP
 	if (hp < 1)
