@@ -136,7 +136,7 @@ int monster_turn(int cols, char (* map)[cols])
 		dist_x = abs(monster[m].x - px);
 		
 		// check sleep
-		if (!(rand() % (dlvl + 2)))
+		if (!(rand() % (dlvl + 1)))
 			;
 		else if (dist_y < dlvl + 3 && dist_x < dlvl + 3)
 			monster[m].awake = 1;
@@ -205,7 +205,7 @@ int monster_turn(int cols, char (* map)[cols])
 		if (dist_y < 2 && dist_x < 2)
 		{
 			int dmg = ((monster[m].type - 96) + dlvl) / 2;
-			if (rand() % 3)
+			if (rand() % 2)
 			{
 				hp -= dmg;
 				if (dmg > dlvl / 2 + 1)
@@ -785,6 +785,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 		{
 			mvprintw(0, 0, " You've stepped into a trap... dart hits you!");
 			hp -= dlvl / 2 + 1;
+			if (hp < 1)
+				killer = '^';
 		}
 		else
 		{
@@ -794,10 +796,16 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 	}
 	
 	// process state
-	if (!strcmp(state, "conf") && rand() % 2)
-		strncpy(state, "\0\0\0\0\0", 5);
-	else
-		mvprintw(rows, cols - 20, "conf");
+	if (!strcmp(state, "conf"))
+	{
+		if (rand() % 3)
+		{
+			strncpy(state, "\0\0\0\0\0", 5);
+			mvprintw(rows, cols - 20, "    ");
+		}
+		else
+			mvprintw(rows, cols - 20, "conf");
+	}
 	
 	// RIP
 	if (hp < 1)
@@ -806,7 +814,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 		{
 			clear();
 			attron(A_BOLD | COLOR_PAIR(RED));
-			mvprintw(rows / 2 - 3, cols / 2 - 10, "You were captured by %c.\n\n\n", killer);
+			mvprintw(rows / 2 - 3, cols / 2 - 10, "You were captured by %c\n\n\n", killer);
 			attroff(A_BOLD | COLOR_PAIR(RED));
 			printw("\tLevel reached: %d\n"
 			"\tMonsters defeated: %d\n"
