@@ -401,10 +401,12 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         return 0;
     }
     // wall
-    else if (mana > 2 && (c == '3' || c == 'z' || c == 'i'))
+    else if (mana > 1 && (c == '4' || c == 'z' || c == 'i'))
     {
         c = getch();
-        mana -= 3;
+        mana -= 2;
+        if (hp > 1)
+            hp--;
 
         if      (c == KEY_UP || c == 'w' || c == 'k')
             dir_y--;
@@ -893,12 +895,12 @@ int main(void)
     char map[rows][cols]; // 0..119
     char obj[rows][cols]; // 0..119
 
-    printw("\n\n");
+    printw("\n");
     attron(A_BOLD);
     printw("\t\t\t\t       Roglik");
     attroff(A_BOLD);
     
-    printw("\n\n\n\tBring the Ring to the ");
+    printw("\n\n\tBring the Ring to the ");
 
     attron(A_BOLD | COLOR_PAIR(RED));
     printw("River of Flame");
@@ -909,15 +911,17 @@ int main(void)
     printw("\n\n\n\tControls:\n\n"
     "\tArrows/wasd/hjkl - move and attack\n"
     "\tSpace/Enter/> - go to the next level \n"
-    "\t1/q/t - teleport \n"
-    "\t2/e/y - heal \n"
+    "\t1/q/t - teleport (mana) \n"
+    "\t2/e/y - heal (mana) \n"
+    "\t3/r/u - dig (HP) \n"
+    "\t4/z/i - magic wall (HP & mana) \n"
     "\t\'n\' - start a new game\n"
     "\t\'ESC\' - exit the game\n\n\n"
     "\tYou level up HP and Attack by defeating monsters.\n"
     "\tYour loose satiation (HP) and gain Mana after some time.\n\n\tChoose race: ");
     attron(A_BOLD | COLOR_PAIR(CYAN));
     printw("1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc");
-            //  mid    sturdy    dexy   stealth  reverse
+            //  mid    sturdy    dexy     stealth    reverse
     attroff(A_BOLD | COLOR_PAIR(CYAN));
     
     c = getch();
@@ -962,7 +966,7 @@ int main(void)
         return 0;
     }
 
-    do
+    while (1)
     {
         // rows-1 cause map[][] 0.. 119
         c = game_loop(c, rows - 1, cols - 1, map, obj);
@@ -972,5 +976,4 @@ int main(void)
             return 0;
         }
     }
-    while (1);
 }
