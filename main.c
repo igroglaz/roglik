@@ -13,6 +13,7 @@
 
 int py, px; // @ coords
 int sy, sx; // > coords
+char race[9] = {0};
 int att = 1;
 int hp;
 int mana = 1;
@@ -117,8 +118,6 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
     attron(A_BOLD);
         mvaddch(py,px,'@');
     attroff(A_BOLD);
-    
-    mvprintw(rows, 0, "HP: %d   Att: %d   Mana: %d \t\t Dlvl: %d", hp, att, mana, dlvl);
     
     return 0;
 }
@@ -729,6 +728,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     spawn_creatures(rows, cols, map);
 
     dungeon_draw(rows, cols, map, obj);
+    
+    mvprintw(rows, 0, " %s    HP: %d   Att: %d   Mana: %d \t\t Dlvl: %d",race, hp, att, mana, dlvl);
 
     // new lvl
     if (new_lvl == 1)
@@ -774,7 +775,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         }
     }
     
-    // player stept over trap
+    // player steps on a trap
     if (obj[py][px] == '^')
     {
         attron(A_BOLD | COLOR_PAIR(YELLOW));
@@ -915,15 +916,45 @@ int main(void)
     "\tYou level up HP and Attack by defeating monsters.\n"
     "\tYour loose satiation (HP) and gain Mana after some time.\n\n\tChoose race: ");
     attron(A_BOLD | COLOR_PAIR(CYAN));
-    printw("1) Human 2) Dwarf 3) Elf 4) Halfling 5) Orc");
+    printw("1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc");
             //  mid    sturdy    dexy   stealth  reverse
     attroff(A_BOLD | COLOR_PAIR(CYAN));
     
-    
     c = getch();
     
-    // char creation
-    hp = 10 + rand() % 2;
+    switch (c)
+    {
+        case '2':
+        {
+            hp = 10 + rand() % 3 + 2;
+            strncpy(race, "Dwarf\0", 6);
+            break;
+        }
+        case '3':
+        {
+            hp = 10 + rand() % 3 + 1;
+            strncpy(race, "Elf\0", 4);
+            break;
+        }
+        case '4':
+        {
+            hp = 10 - rand() % 2;
+            strncpy(race, "Halfling\0", 9);
+            break;
+        }
+        case '5':
+        {
+            hp = 10 - rand() % 2 + 1;
+            strncpy(race, "Orc\0", 4);
+            break;
+        }
+        default:
+        {
+            hp = 10 + rand() % 2;
+            strncpy(race, "Human\0", 6);
+            break;
+        }
+    }
 
     if (c == 27) // 27 'ESC'
     {
