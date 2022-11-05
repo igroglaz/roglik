@@ -351,28 +351,8 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 		mvprintw(0, cols / 2, ">> You heal yourself."); 
 		return 0;
 	}
-	// wall
-	else if (mana > 2 && (c == '3' || c == 'r' || c == 'u'))
-	{
-		c = getch();
-		mana -= 3;
-
-		if      (c == KEY_UP || c == 'w' || c == 'k')
-			dir_y--;
-		else if (c == KEY_DOWN || c == 's' || c == 'j')
-			dir_y++;
-		else if (c == KEY_LEFT || c == 'a' || c == 'h')
-			dir_x--;
-		else if (c == KEY_RIGHT || c == 'd' || c == 'l')
-			dir_x++;
-		
-		if (map[dir_y][dir_x] == ' ')
-			map[dir_y][dir_x] = '#';
-		
-		return 0;
-	}
 	// dig
-	else if (hp > 1 && (c == '4' || c == 'z' || c == 'i'))
+	else if (hp > 1 && (c == '3' || c == 'r' || c == 'u'))
 	{
 		c = getch();
 		hp -= 1;
@@ -391,8 +371,26 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 		
 		return 0;
 	}
-// confuse
-//
+	// wall
+	else if (mana > 2 && (c == '3' || c == 'z' || c == 'i'))
+	{
+		c = getch();
+		mana -= 3;
+
+		if      (c == KEY_UP || c == 'w' || c == 'k')
+			dir_y--;
+		else if (c == KEY_DOWN || c == 's' || c == 'j')
+			dir_y++;
+		else if (c == KEY_LEFT || c == 'a' || c == 'h')
+			dir_x--;
+		else if (c == KEY_RIGHT || c == 'd' || c == 'l')
+			dir_x++;
+		
+		if (map[dir_y][dir_x] == ' ')
+			map[dir_y][dir_x] = '#';
+		
+		return 0;
+	}
 
 	if (map[dir_y][dir_x] == '~')
 	{
