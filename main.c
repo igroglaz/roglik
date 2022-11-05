@@ -206,20 +206,23 @@ int monster_turn(int cols, char (* map)[cols])
             int dmg = ((monster[m].type - 96) + dlvl) / 2;
             if (rand() % 2)
             {
-                hp -= dmg;
-                if (dmg > dlvl / 2 + 1)
-                    mvprintw(0, 0, " The '%c' hits you hard.", monster[m].type);
+                if ((!(rand() % 3) && !strcmp(race, "Halfling")) || (!(rand() % 5) && !strcmp(race, "Elf")))
+                    mvprintw(0, 0, " You dodge the attack.");
                 else
-                    mvprintw(0, 0, " The '%c' hits you.", monster[m].type);
-                if (hp < 1)
-                    return monster[m].type;
+                {
+                    hp -= dmg;
+                    if (dmg > dlvl / 2 + 1)
+                        mvprintw(0, 0, " The '%c' hits you hard.", monster[m].type);
+                    else
+                        mvprintw(0, 0, " The '%c' hits you.", monster[m].type);
+                    if (hp < 1)
+                        return monster[m].type;
+                }
             }
             else
             {
                 if (rand() % 2)
                     mvprintw(0, 0, " The '%c' missed you.", monster[m].type);
-                else
-                    mvprintw(0, 0, " You dodge the attack.");
             }
         }
         else if (map[dir_y][dir_x] == ' ' && (dir_y != py && dir_x != px))
@@ -377,7 +380,10 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         hp += rand() % dlvl + 5;
         if (hp > dlvl * 10)
             hp = dlvl * 10;
-        mvprintw(0, cols / 2, ">> You heal yourself."); 
+        mvprintw(0, cols / 2, ">> You heal yourself.");
+        // also heal conf
+        strncpy(state, "\0\0\0\0\0", 5);
+        mvprintw(rows, cols - 20, "    ");
         return 0;
     }
     // dig
@@ -921,7 +927,7 @@ int main(void)
     "\tYour loose satiation (HP) and gain Mana after some time.\n\n\tChoose race: ");
     attron(A_BOLD | COLOR_PAIR(CYAN));
     printw("1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc");
-            //  mid    sturdy    dexy     stealth    reverse
+            //  mid    sturdy    dexy   stealth-dodge  reverse
     attroff(A_BOLD | COLOR_PAIR(CYAN));
     
     c = getch();
@@ -936,7 +942,7 @@ int main(void)
         }
         case '3':
         {
-            hp = 10 + rand() % 3 + 1;
+            hp = 10 + rand() % 3;
             strncpy(race, "Elf\0", 4);
             break;
         }
