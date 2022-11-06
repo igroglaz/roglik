@@ -22,6 +22,7 @@ bool p_placed = 0;
 int r_placed = 0;
 int dlvl = 1;
 int turns = 0;
+int lvl_turns = 0;
 int m_defeated = 0;
 char state[5] = {0}; // conf, pois, blee etc
 
@@ -59,7 +60,7 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
             // objects can be visible only on empty floor
             else if (map[y][x] == ' ')
             {
-                if (obj[y][x] == '>')
+                if (obj[y][x] == '>' && lvl_turns > 9)
                 {
                     attron(A_BOLD);
                     mvaddch(y,x,'>');
@@ -310,7 +311,7 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
 
 int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
-    if (turns == 0) // to prevent need of double push a button '3' at the beginning
+    if (turns == 0 || c == 0) // to prevent need of double push a button '3' at the beginning
         return 0;
     
     int dir_y = py, dir_x = px;
@@ -523,7 +524,7 @@ int spawn_creatures(int rows, int cols, char (* map)[cols])
 
 int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols], int new_lvl)
 {
-    if (new_lvl == 1 || turns == 1)
+    if (new_lvl == 1 || turns == 0)
     {
         // fill dungeon with empty obj
         for (int y = 0; y <= rows; y++)
@@ -736,14 +737,13 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     spawn_creatures(rows, cols, map);
 
     dungeon_draw(rows, cols, map, obj);
-    
-    mvprintw(rows, 0, " %s    HP: %d   Att: %d   Mana: %d \t\t Dlvl: %d",race, hp, att, mana, dlvl);
 
     // new lvl
     if (new_lvl == 1)
     {
         dlvl++;
         hp += dlvl;
+        lvl_turns = 0;
         dungeon_gen(rows, cols, map);
         spawn_creatures(rows, cols, map);
         spawn_objects(rows, cols, map, obj, new_lvl);
@@ -782,7 +782,10 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
                 return c;
         }
     }
-    
+
+    // UI line
+    mvprintw(rows, 0, " %s    HP: %d   Att: %d   Mana: %d \t\t Dlvl: %d",race, hp, att, mana, dlvl);
+
     // player steps on a trap
     if (obj[py][px] == '^')
     {
@@ -847,6 +850,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         return c;
     // turn count
     turns++;
+    lvl_turns++;
     
     // hunger
     if (!(turns % 50 - (dlvl * 2)) && hp > 1)
@@ -861,10 +865,11 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         t_placed = 0;
         p_placed = 0;
         r_placed = 0;
-        turns = 1;
+        turns = 0;
+        lvl_turns = 0;
         m_defeated = 0;
         dlvl = 1;
-        c = '\0';
+        c = 0;
     }
 
     return c;
@@ -872,7 +877,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
 int main(void)
 {
-    int c = '\0'; // input
+    int c = 0; // input
     int rows, cols;
   
     initscr(); // init curses
@@ -970,6 +975,8 @@ int main(void)
         endwin();
         return 0;
     }
+
+    c = 0;
 
     while (1)
     {
