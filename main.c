@@ -27,11 +27,6 @@ int lvl_turns;
 int m_defeated;
 char state[5] = {0}; // conf, pois, blee etc
 
-// sneakiness
-// stasis
-// blow surroundings
-// dig a hole in floor?
-
 struct monsters
 {
     int y;
@@ -884,7 +879,9 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         mvprintw(rows, cols - 10, "[Trap]");
         attroff(A_BOLD | COLOR_PAIR(YELLOW));
         
-        if (rand() % 2)
+        if (!strcmp(race, "Halfling") && rand() % 2)
+            ;
+        else if (rand() % 2)
         {
             mvprintw(0, 0, " You've stepped into a trap... dart hits you!");
             hp -= dlvl / 2 + 1;
