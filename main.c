@@ -137,7 +137,7 @@ int monster_turn(int cols, char (* map)[cols])
         // check sleep
         if (!(rand() % (dlvl + 1)))
             ;
-        else if (dist_y < dlvl + 3 && dist_x < dlvl + 3)
+        else if (dist_y < dlvl + 3 - stealth && dist_x < dlvl + 3 - stealth)
             monster[m].awake = 1;
         
         if (monster[m].awake == 0)
