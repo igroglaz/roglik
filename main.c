@@ -21,7 +21,7 @@ bool t_placed = 0;
 bool p_placed = 0;
 int r_placed = 0;
 int dlvl = 1;
-int turns = 1;
+int turns = 0;
 int m_defeated = 0;
 char state[5] = {0}; // conf, pois, blee etc
 
@@ -310,7 +310,7 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
 
 int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
-    if (c == 0)
+    if (turns == 0) // to prevent need of double push a button '3' at the beginning
         return 0;
     
     int dir_y = py, dir_x = px;
@@ -845,7 +845,6 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     // exit game (ESC)
     if (c == 27)
         return c;
-
     // turn count
     turns++;
     
@@ -864,8 +863,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         r_placed = 0;
         turns = 1;
         m_defeated = 0;
-        c = 0;
         dlvl = 1;
+        c = '\0';
     }
 
     return c;
@@ -873,7 +872,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
 int main(void)
 {
-    int c = 0; // input
+    int c = '\0'; // input
     int rows, cols;
   
     initscr(); // init curses
