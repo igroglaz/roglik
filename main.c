@@ -14,16 +14,17 @@
 int py, px; // @ coords
 int sy, sx; // > coords
 char race[9] = {0};
-int att = 1;
+int att;
 int hp;
-int mana = 1;
-bool t_placed = 0;
-bool p_placed = 0;
-int r_placed = 0;
-int dlvl = 1;
-int turns = 0;
-int lvl_turns = 0;
-int m_defeated = 0;
+int mana;
+int stealth;
+bool t_placed;
+bool p_placed;
+int r_placed;
+int dlvl;
+int turns;
+int lvl_turns;
+int m_defeated;
 char state[5] = {0}; // conf, pois, blee etc
 
 // sneakiness
@@ -252,8 +253,12 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
                 sleeped = 1;
             }
 
+            int dmg = att;
+            
             // hit
-            monster[m].lvl -= att;
+            if (!strcmp(race, "Halfling") && att > 1)
+                dmg--;
+            monster[m].lvl -= dmg;
 
             // if was asleep and we didn't defeat it yet
             if (sleeped && monster[m].lvl > 0)
@@ -263,7 +268,7 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
                 mvprintw(0, cols / 2, ">> You hit sleeping '%c' hard!     ", monster[m].type);
                 if (monster[m].lvl < (dlvl * 9) / 8)
                     was_almost_dead = 1;
-                monster[m].lvl -= att;
+                monster[m].lvl -= dmg;
                 // give monster a chance to survive critical hit
                 if (!was_almost_dead && monster[m].lvl < 1 && rand() % (dlvl + 1))
                     monster[m].lvl = 1;
@@ -719,12 +724,88 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
     return 0;
 }
 
+int create_char(int c)
+{
+    att = 1;
+    hp = 10;
+    mana = 1;
+    stealth = 0;
+    t_placed = 0;
+    p_placed = 0;
+    r_placed = 0;
+    dlvl = 1;
+    turns = 0;
+    lvl_turns = 0;
+    m_defeated = 0;
+    strncpy(state, "\0\0\0\0\0", 5);
+
+    if (c == 'n')
+    {
+        if (!strcmp(race, "Human"))
+            c = '1';
+        else if (!strcmp(race, "Dwarf"))
+            c = '2';
+        else if (!strcmp(race, "Elf"))
+            c = '3';
+        else if (!strcmp(race, "Halfling"))
+            c = '4';
+        else if (!strcmp(race, "Orc"))
+            c = '5';     
+    }
+
+    switch (c)
+    {
+        case '2':
+        {
+            hp = 10 + rand() % 3 + 2;
+            att += 2;
+            stealth = -2;
+            strncpy(race, "Dwarf\0", 6);
+            break;
+        }
+        case '3':
+        {
+            hp = 10 + rand() % 3;
+            att += 2;
+            stealth = 1;
+            strncpy(race, "Elf\0", 4);
+            break;
+        }
+        case '4':
+        {
+            hp = 10 - rand() % 2;
+            stealth = 2;
+            strncpy(race, "Halfling\0", 9);
+            break;
+        }
+        case '5':
+        {
+            hp = 10 - rand() % 2 + 1;
+            att += 1;
+            stealth = -1;
+            strncpy(race, "Orc\0", 4);
+            break;
+        }
+        default:
+        {
+            hp = 10 + rand() % 2;
+            stealth = 0;
+            strncpy(race, "Human\0", 6);
+            break;
+        }
+    }
+
+    return 0;
+}
+
 int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
     int new_lvl = 0;
     int killer = 0;
     srand(time(NULL));
     move(0,0); clrtoeol(); // clear 1st line for messages
+
+    if (turns == 0) create_char(c);
 
     new_lvl = p_action(c, rows, cols, map, obj); // +battle()
     
@@ -858,19 +939,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     // start over by demand
     if (c == 'n')
-    {
-        att = 1;
-        hp = 10 + rand() % 2;
-        mana = 1;
-        t_placed = 0;
-        p_placed = 0;
-        r_placed = 0;
-        turns = 0;
-        lvl_turns = 0;
-        m_defeated = 0;
-        dlvl = 1;
-        c = 0;
-    }
+        create_char(c);
 
     return c;
 }
@@ -935,48 +1004,12 @@ int main(void)
     attroff(A_BOLD | COLOR_PAIR(CYAN));
     
     c = getch();
-    
-    switch (c)
-    {
-        case '2':
-        {
-            hp = 10 + rand() % 3 + 2;
-            strncpy(race, "Dwarf\0", 6);
-            break;
-        }
-        case '3':
-        {
-            hp = 10 + rand() % 3;
-            strncpy(race, "Elf\0", 4);
-            break;
-        }
-        case '4':
-        {
-            hp = 10 - rand() % 2;
-            strncpy(race, "Halfling\0", 9);
-            break;
-        }
-        case '5':
-        {
-            hp = 10 - rand() % 2 + 1;
-            strncpy(race, "Orc\0", 4);
-            break;
-        }
-        default:
-        {
-            hp = 10 + rand() % 2;
-            strncpy(race, "Human\0", 6);
-            break;
-        }
-    }
 
     if (c == 27) // 27 'ESC'
     {
         endwin();
         return 0;
     }
-
-    c = 0;
 
     while (1)
     {
