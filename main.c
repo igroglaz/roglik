@@ -32,8 +32,6 @@ char state[5] = {0}; // conf, pois, blee etc
 // blow surroundings
 // dig a hole in floor?
 
-// traps?
-
 struct monsters
 {
     int y;
@@ -369,6 +367,8 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     else if (mana > 0 && (c == '1' || c == 'q' || c == 't'))
     {
         mana--;
+        if (!strcmp(race, "Elf") && rand() % 2)
+            mana++;
 
         do
         {
@@ -383,6 +383,8 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     else if (mana > 1 && (c == '2' || c == 'e' || c == 'y'))
     {
         mana -= 2;
+        if (!strcmp(race, "Orc") && rand() % 2)
+            mana++;
         hp += rand() % dlvl + 5;
         if (hp > dlvl * 10)
             hp = dlvl * 10;
@@ -397,6 +399,8 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     {
         c = getch();
         hp -= 1;
+        if (!strcmp(race, "Dwarf") && rand() % 2)
+            hp++;
 
         if      (c == KEY_UP || c == 'w' || c == 'k')
             dir_y--;
@@ -419,6 +423,11 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         mana -= 2;
         if (hp > 1)
             hp--;
+        if (!strcmp(race, "Human") && rand() % 2)
+        {
+            hp++;
+            mana++;
+        }
 
         if      (c == KEY_UP || c == 'w' || c == 'k')
             dir_y--;
