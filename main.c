@@ -278,22 +278,28 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
             if (monster[m].lvl < 1)
             {
                 m_defeated++;
+                
+                // gain player lvl
 
+                // 1st lvl hardcoded
                 if (att == 1 && (!(rand() % 3) || m_defeated > 2))
                 {
                     att++;
                     mana++;
                     hp += rand() % 10 + 1;
                 }
+                // gain stats
                 else if (rand() %
-                   (((monster[m].type - 96) + dlvl) / 2) )
+                   (((monster[m].type - 96) + dlvl) / 2))
                 {
                     hp += rand() % 10 + 1;
-                    // add race dependancy...
                     if (rand() % 2)
                         mana++;
                     else
                         att++;
+                    
+                    if (!strcmp(race, "Human") && rand() % 2 && dlvl > 1)
+                        hp++;
                 }
 
                 if (m_defeated > 9 && !(m_defeated % 10))
@@ -423,11 +429,6 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         mana -= 2;
         if (hp > 1)
             hp--;
-        if (!strcmp(race, "Human") && rand() % 2)
-        {
-            hp++;
-            mana++;
-        }
 
         if      (c == KEY_UP || c == 'w' || c == 'k')
             dir_y--;
