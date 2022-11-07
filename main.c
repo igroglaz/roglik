@@ -1006,12 +1006,36 @@ int main(void)
     "\tYou level up HP and Attack by defeating monsters.\n"
     "\tYour loose satiation (HP) and gain Mana after some time.\n\n\tChoose race: ");
     attron(A_BOLD | COLOR_PAIR(CYAN));
-    printw("1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc");
+    printw("1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc\n"
+    "\t\t\t   -- press '?' to see races details --");
             //  mid    sturdy    dexy   stealth-dodge  reverse
     attroff(A_BOLD | COLOR_PAIR(CYAN));
     
     c = getch();
 
+    if (c == '?')
+    {
+        clear();
+        printw("\n\t\t\t\tRaces:\n\n"
+        "\tHuman: learn faster\n"
+        "\tboni to Building\n\n"
+        "\tDwarf: +HP, +Att, -Stealth\n"
+        "\tboni to Digging\n\n"
+        "\tElf: +HP, +Att, +Stealth\n"
+        "\tboni to Teleportation\n\n"
+        "\tHalfling: -HP, -Att, ++Stealth\n"
+        "\tcan dodge and avoid traps sometimes\n\n"
+        "\tOrc: +HP, +Att, -Stealth \n"
+        "\tboni to Healing\n\n\n");
+        
+        printw("\tSo.. Which race do you wish to take:\n");
+        attron(A_BOLD | COLOR_PAIR(CYAN));
+        printw("\t1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc\n");
+        attroff(A_BOLD | COLOR_PAIR(CYAN));
+        
+        c = getch();
+    }
+    
     if (c == 27) // 27 'ESC'
     {
         endwin();
