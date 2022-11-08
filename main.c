@@ -1016,16 +1016,38 @@ int main(void)
     if (c == '?')
     {
         clear();
-        printw("\n\t\t\t\tRaces:\n\n"
-        "\tHuman: learn faster\n"
-        "\tboni to Building\n\n"
-        "\tDwarf: +HP, +Att, -Stealth\n"
-        "\tboni to Digging\n\n"
-        "\tElf: +HP, +Att, +Stealth\n"
-        "\tboni to Teleportation\n\n"
-        "\tHalfling: -HP, -Att, ++Stealth\n"
-        "\tcan dodge and avoid traps sometimes\n\n"
-        "\tOrc: +HP, +Att, -Stealth \n"
+        attron(A_BOLD | COLOR_PAIR(CYAN));
+        printw("\n\t\t\t\tRaces:\n\n");
+        attroff(A_BOLD | COLOR_PAIR(CYAN));
+
+        attron(A_BOLD);
+        printw("\tHuman: ");
+        attroff(A_BOLD);
+        printw("learn faster\n"
+        "\tboni to Building\n\n");
+
+        attron(COLOR_PAIR(YELLOW));
+        printw("\tDwarf: ");
+        attroff(COLOR_PAIR(YELLOW));
+        printw("+HP, +Att, -Stealth\n"
+        "\tboni to Digging\n\n");
+
+        attron(A_BOLD | COLOR_PAIR(GREEN));
+        printw("\tElf: ");
+        attroff(A_BOLD | COLOR_PAIR(GREEN));
+        printw("+HP, +Att, +Stealth\n"
+        "\tboni to Teleportation\n\n");
+
+        attron(A_BOLD | COLOR_PAIR(YELLOW));
+        printw("\tHalfling: ");
+        attroff(A_BOLD | COLOR_PAIR(YELLOW));
+        printw("-HP, -Att, ++Stealth\n"
+        "\tcan dodge and avoid traps sometimes\n\n");
+
+        attron(A_BOLD | COLOR_PAIR(MAGENTA));
+        printw("\tOrc: ");
+        attroff(A_BOLD | COLOR_PAIR(MAGENTA));
+        printw("+HP, +Att, -Stealth \n"
         "\tboni to Healing\n\n\n");
         
         printw("\tSo.. Which race do you wish to take:\n");
