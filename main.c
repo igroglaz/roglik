@@ -417,28 +417,6 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         
         return 0;
     }
-    // wall
-    else if (mana > 1 && (c == '4' || c == 'z' || c == 'i'))
-    {
-        c = getch();
-        mana -= 2;
-        if (hp > 1)
-            hp--;
-
-        if      (c == KEY_UP || c == 'w' || c == 'k')
-            dir_y--;
-        else if (c == KEY_DOWN || c == 's' || c == 'j')
-            dir_y++;
-        else if (c == KEY_LEFT || c == 'a' || c == 'h')
-            dir_x--;
-        else if (c == KEY_RIGHT || c == 'd' || c == 'l')
-            dir_x++;
-        
-        if (map[dir_y][dir_x] == ' ')
-            map[dir_y][dir_x] = '#';
-        
-        return 0;
-    }
 
     if (map[dir_y][dir_x] == '~')
     {
@@ -1000,11 +978,10 @@ int main(void)
     "\t1/q/t - teleport (mana) \n"
     "\t2/e/y - heal (mana) \n"
     "\t3/r/u - dig (HP) \n"
-    "\t4/z/i - magic wall (HP & mana) \n"
     "\t\'n\' - start a new game\n"
     "\t\'ESC\' - exit the game\n\n\n"
     "\tYou level up HP and Attack by defeating monsters.\n"
-    "\tYour loose satiation (HP) and gain Mana after some time.\n\n\tChoose race: ");
+    "\tYour loose satiation (HP) after some time.\n\n\tChoose race: ");
     attron(A_BOLD | COLOR_PAIR(CYAN));
     printw("1) Human  2) Dwarf  3) Elf  4) Halfling  5) Orc\n"
     "\t\t\t   -- press '?' to see races details --");
@@ -1023,8 +1000,7 @@ int main(void)
         attron(A_BOLD);
         printw("\tHuman: ");
         attroff(A_BOLD);
-        printw("learn faster\n"
-        "\tboni to Building\n\n");
+        printw("learn faster\n\n");
 
         attron(COLOR_PAIR(YELLOW));
         printw("\tDwarf: ");
@@ -1041,7 +1017,7 @@ int main(void)
         attron(A_BOLD | COLOR_PAIR(YELLOW));
         printw("\tHalfling: ");
         attroff(A_BOLD | COLOR_PAIR(YELLOW));
-        printw("-HP, -Att, ++Stealth\n"
+        printw("-HP, -Att, +Stealth\n"
         "\tcan dodge and avoid traps sometimes\n\n");
 
         attron(A_BOLD | COLOR_PAIR(MAGENTA));
