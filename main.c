@@ -832,7 +832,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     srand(time(NULL));
     move(0,0); clrtoeol(); // clear 1st line for messages
 
-    if (turns == 0)
+    if (turns == 0 || c == 'n')
         create_char(c);
 
     dungeon_gen(rows, cols, map);
@@ -869,10 +869,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     }
     // teleport
     else if (action_result == 2)
-    {
         mvprintw(0, 0, " You teleported away.");
-        action_result = 0;
-    }
     // win
     else if (action_result == 3)
     {
@@ -891,13 +888,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
             "\tMana: %d\n"
             "\n\n\tPress 'n' to start a new game or 'ESC' to exit.", dlvl, m_defeated, turns, att, mana);
             c = getch();
-            if (c == 'n')
-            {
-                turns = 0;
-                c = 0;
-                return 0;
-            }
-            else if (c == 27)
+            if (c == 'n' || c == 27)
                 return c;
         }
     }
@@ -922,14 +913,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     // player input
     c = getch();
 
-    // new game by demand
-    if (c == 'n')
-    {
-        turns = 0;
-        return c; // return 'n' to recreate certain class
-    }
     // exit game (ESC)
-    else if (c == 27)
+    if (c == 27)
         return c;
     else
     {
