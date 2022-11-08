@@ -632,7 +632,7 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
                     break;
                 }
                 
-                // fill DB map with rooms
+                // check for collision
                 for (int y = ry; y <= ry + r_size_y; y++)
                 {
                     for (int x = rx; x <= rx + r_size_x; x++)
@@ -642,7 +642,7 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
                             map[y][x + 2] == ' ' || map[y][x - 2] == ' ')
                         {
                             collision = 1;
-                            y = ry + r_size_y; // exit upper loop..
+                            y = ry + r_size_y + 1; // exit upper loop..
                             break; // ..exit from current loop
                         }
                     }
@@ -657,7 +657,7 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
                 {
                     if (map[y][x] == '%')
                     {
-                        y = ry + r_size_y; // exit upper loop..
+                        y = ry + r_size_y + 1; // exit upper loop..
                         break; // ..exit from current loop
                     }
                     else
@@ -788,11 +788,13 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     srand(time(NULL));
     move(0,0); clrtoeol(); // clear 1st line for messages
 
-    if (turns == 0) create_char(c);
+    if (turns == 0 || c == 'n')
+        create_char(c);
 
     new_lvl = p_action(c, rows, cols, map, obj); // +battle()
     
-    killer = monster_turn(cols, map);
+    if (turns > 0)
+        killer = monster_turn(cols, map);
     
     dungeon_gen(rows, cols, map);
     
@@ -921,10 +923,6 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     // hunger
     if (!(turns % 50 - (dlvl * 2)) && hp > 1)
         hp--;
-
-    // start over by demand
-    if (c == 'n')
-        create_char(c);
 
     return c;
 }
