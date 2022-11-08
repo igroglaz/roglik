@@ -117,6 +117,28 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
     return 0;
 }
 
+int rip(int rows, int cols, int killer)
+{
+    int c;
+    
+    while (1)
+    {
+        clear();
+        attron(A_BOLD | COLOR_PAIR(RED));
+        mvprintw(rows / 2 - 3, cols / 2 - 10, "You were captured by %c\n\n\n", killer);
+        attroff(A_BOLD | COLOR_PAIR(RED));
+        printw("\tLevel reached: %d\n"
+        "\tMonsters defeated: %d\n"
+        "\tTurns: %d\n\n"
+        "\tAttack: %d\n"
+        "\tMana: %d\n"
+        "\n\n\tPress 'n' to start a new game or 'ESC' to exit.", dlvl, m_defeated, turns, att, mana);
+        c = getch();
+        if (c == 'n' || c == 27)
+            return c;
+    }
+}
+
 int check_trap(int rows, int cols, char (* obj)[cols])
 {
     // player steps on a trap
@@ -812,15 +834,6 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     if (turns == 0)
         create_char(c);
-    
-    if (turns > 0)
-    {
-        if (c != 0) // to prevent need of double push a button '3' at the beginning
-            action_result = p_action(c, rows, cols, map, obj); // +battle()
-        killer = monster_turn(cols, map);
-        if (killer == 0)
-            killer = check_trap(rows, cols, obj);
-    }
 
     dungeon_gen(rows, cols, map);
 
@@ -828,7 +841,20 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     spawn_creatures(rows, cols, map);
 
-    dungeon_draw(rows, cols, map, obj);
+    if (turns > 0)
+    {
+        if (c != 0) // to prevent need of double push a button '3' at the beginning
+            action_result = p_action(c, rows, cols, map, obj); // +battle()
+        killer = monster_turn(cols, map);
+        if (hp > 0)
+            killer = check_trap(rows, cols, obj);
+        else
+        {
+            c = rip(rows, cols, killer);
+            turns = 0;
+            return c;
+        }
+    }
 
     // new lvl
     if (action_result == 1)
@@ -876,6 +902,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         }
     }
 
+    dungeon_draw(rows, cols, map, obj);
+
     // UI line
     mvprintw(rows, 0, " %s    HP: %d   Att: %d   Mana: %d \t\t Dlvl: %d",race, hp, att, mana, dlvl);
     
@@ -890,31 +918,9 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         else
             mvprintw(rows, cols - 20, "conf");
     }
-    
-    // RIP
-    if (hp < 1)
-    {
-        while (1)
-        {
-            clear();
-            attron(A_BOLD | COLOR_PAIR(RED));
-            mvprintw(rows / 2 - 3, cols / 2 - 10, "You were captured by %c\n\n\n", killer);
-            attroff(A_BOLD | COLOR_PAIR(RED));
-            printw("\tLevel reached: %d\n"
-            "\tMonsters defeated: %d\n"
-            "\tTurns: %d\n\n"
-            "\tAttack: %d\n"
-            "\tMana: %d\n"
-            "\n\n\tPress 'n' to start a new game or 'ESC' to exit.", dlvl, m_defeated, turns, att, mana);
-            c = getch();
-            if (c == 'n')
-                break;
-            else if (c == 27)
-                return c;
-        }
-    }
-    else
-        c = getch();
+
+    // player input
+    c = getch();
 
     // new game by demand
     if (c == 'n')
