@@ -22,7 +22,7 @@ bool t_placed;
 bool p_placed;
 int r_placed;
 int dlvl;
-int turns;
+int turns = 0;
 int lvl_turns;
 int m_defeated;
 char state[5] = {0}; // conf, pois, blee etc
@@ -120,6 +120,9 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
 int monster_turn(int cols, char (* map)[cols])
 {
     int dist_y, dist_x;
+    
+    if (turns == 0)
+        return 0;
     
     for (int m = 0; m < 10 + dlvl / 2; m++)
     {
@@ -362,7 +365,7 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         t_placed = 0;
         p_placed = 0;
         r_placed = 0;
-        return 1;
+        return 1; // go down
     }
     // teleport
     else if (mana > 0 && (c == '1' || c == 'q' || c == 't'))
@@ -378,7 +381,7 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         }
         while (map[py][px] != ' ' && obj[py][px] == ' ');
 
-        return 2;
+        return 2; // tp
     }
     // heal
     else if (mana > 1 && (c == '2' || c == 'e' || c == 'y'))
@@ -418,17 +421,17 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         return 0;
     }
 
+    // win
     if (map[dir_y][dir_x] == '~')
-    {
-        // win
         return 3;
-    }
 
+    // move
     if (map[dir_y][dir_x] == ' ')
     {
         py = dir_y;
         px = dir_x;
     }
+    // battle
     else if (map[dir_y][dir_x] == 't')
         battle (cols, map, dir_y, dir_x);
     
@@ -510,9 +513,9 @@ int spawn_creatures(int rows, int cols, char (* map)[cols])
     return 0;
 }
 
-int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols], int new_lvl)
+int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
-    if (new_lvl == 1 || turns == 0)
+    if (lvl_turns == 0 || turns == 0)
     {
         // fill dungeon with empty obj
         for (int y = 0; y <= rows; y++)
@@ -530,7 +533,7 @@ int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols], in
         {
             do
             {
-                sy = rand() % rows;
+                sy = rand() % rows; // globals; to find distance upon p gen
                 sx = rand() % cols;
             }
             while (map[sy][sx] != ' ');
@@ -710,14 +713,12 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
 int create_char(int c)
 {
     att = 1;
-    hp = 10;
     mana = 1;
     stealth = 0;
     t_placed = 0;
     p_placed = 0;
     r_placed = 0;
     dlvl = 1;
-    turns = 0;
     lvl_turns = 0;
     m_defeated = 0;
     strncpy(state, "\0\0\0\0\0", 5);
@@ -783,7 +784,7 @@ int create_char(int c)
 
 int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
-    int new_lvl = 0;
+    int action_result = 0;
     int killer = 0;
     srand(time(NULL));
     move(0,0); clrtoeol(); // clear 1st line for messages
@@ -791,38 +792,37 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     if (turns == 0)
         create_char(c);
 
-    new_lvl = p_action(c, rows, cols, map, obj); // +battle()
+    action_result = p_action(c, rows, cols, map, obj); // +battle()
 
-    if (turns > 0)
-        killer = monster_turn(cols, map);
+    killer = monster_turn(cols, map);
 
     dungeon_gen(rows, cols, map);
 
-    spawn_objects(rows, cols, map, obj, new_lvl);
+    spawn_objects(rows, cols, map, obj);
 
     spawn_creatures(rows, cols, map);
 
     dungeon_draw(rows, cols, map, obj);
 
     // new lvl
-    if (new_lvl == 1)
+    if (action_result == 1)
     {
         dlvl++;
         hp += dlvl;
         lvl_turns = 0;
         dungeon_gen(rows, cols, map);
         spawn_creatures(rows, cols, map);
-        spawn_objects(rows, cols, map, obj, new_lvl);
+        spawn_objects(rows, cols, map, obj);
         dungeon_draw(rows, cols, map, obj);
     }
     // teleport
-    else if (new_lvl == 2)
+    else if (action_result == 2)
     {
         mvprintw(0, 0, " You teleported away.");
-        new_lvl = 0;
+        action_result = 0;
     }
     // win
-    else if (new_lvl == 3)
+    else if (action_result == 3)
     {
         while (1)
         {
@@ -905,11 +905,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
             "\n\n\tPress 'n' to start a new game or 'ESC' to exit.", dlvl, m_defeated, turns, att, mana);
             c = getch();
             if (c == 'n')
-            {
-               turns = 0;
-               c = 0;
-               return 0;
-            }
+                break;
             else if (c == 27)
                 return c;
         }
@@ -941,35 +937,9 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     return c;
 }
 
-int main(void)
+int intro_ui(void)
 {
-    int c = 0; // input
-    int rows, cols;
-  
-    initscr(); // init curses
-    start_color();
-    use_default_colors();
-
-    init_pair(RED, COLOR_RED, COLOR_BLACK);
-    init_pair(GREEN, COLOR_GREEN, COLOR_BLACK);
-    init_pair(YELLOW, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(BLUE, COLOR_BLUE, COLOR_BLACK);
-    init_pair(MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(CYAN, COLOR_CYAN, COLOR_BLACK);
-    
-    keypad(stdscr, 1); // allow ARROWS, F1-F12
-    
-    noecho(); // don't show user input
-    curs_set(0); // hide blinking cursor
-    
-    // adaptive way of the screen size:
-    //getmaxyx(stdscr,rows,cols);
-    // but this particular game designed to be played at tiny term:
-    rows = 23;
-    cols = 80;
-    
-    char map[rows][cols]; // 0..119
-    char obj[rows][cols]; // 0..119
+    int c = 0;
 
     printw("\n");
     attron(A_BOLD);
@@ -1046,7 +1016,43 @@ int main(void)
         c = getch();
     }
     
-    if (c == 27) // 27 'ESC'
+    return c;
+}
+
+int main(void)
+{
+    int c; // input
+    int rows, cols;
+  
+    initscr(); // init curses
+    start_color();
+    use_default_colors();
+
+    init_pair(RED, COLOR_RED, COLOR_BLACK);
+    init_pair(GREEN, COLOR_GREEN, COLOR_BLACK);
+    init_pair(YELLOW, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(BLUE, COLOR_BLUE, COLOR_BLACK);
+    init_pair(MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(CYAN, COLOR_CYAN, COLOR_BLACK);
+    
+    keypad(stdscr, 1); // allow ARROWS, F1-F12
+    
+    noecho(); // don't show user input
+    curs_set(0); // hide blinking cursor
+    
+    // adaptive way of the screen size:
+    //getmaxyx(stdscr,rows,cols);
+    // but this particular game designed to be played at tiny term:
+    rows = 23;
+    cols = 80;
+    
+    char map[rows][cols]; // 0..119
+    char obj[rows][cols]; // 0..119
+
+    // into UI and races help menu
+    c = intro_ui();
+    
+    if (c == 27) // 27 == 'ESC'
     {
         endwin();
         return 0;
