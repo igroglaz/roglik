@@ -566,7 +566,7 @@ int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols])
     }
 
     // each turn there is a chance to spawn trap (the faster you run away - the better)
-    if ((rand() % (16 - dlvl)))
+    if (rand() % ((18 - dlvl) / 2))
     {
         int y, x;
 
@@ -577,8 +577,7 @@ int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols])
         }
         while (map[y][x] != ' ' && obj[y][x] != ' ');
         
-        if (rand() % 2)
-            obj[y][x] = '^';
+        obj[y][x] = '^';
     }
     
     return 0;
@@ -811,8 +810,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         hp += dlvl;
         lvl_turns = 0;
         dungeon_gen(rows, cols, map);
-        spawn_creatures(rows, cols, map);
         spawn_objects(rows, cols, map, obj);
+        spawn_creatures(rows, cols, map);
         dungeon_draw(rows, cols, map, obj);
     }
     // teleport
@@ -917,8 +916,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     if (c == 'n')
     {
         turns = 0;
-        c = 0;
-        return 0;
+        return c; // return 'n' to recreate certain class
     }
     // exit game (ESC)
     else if (c == 27)
