@@ -117,12 +117,37 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
     return 0;
 }
 
+int check_trap(int rows, int cols, char (* obj)[cols])
+{
+    // player steps on a trap
+    if (obj[py][px] == '^')
+    {
+        attron(A_BOLD | COLOR_PAIR(YELLOW));
+        mvprintw(rows, cols - 10, "[Trap]");
+        attroff(A_BOLD | COLOR_PAIR(YELLOW));
+        
+        if (!strcmp(race, "Halfling") && rand() % 2)
+            ;
+        else if (rand() % 2)
+        {
+            mvprintw(0, 0, " You've stepped into a trap... dart hits you!");
+            hp -= dlvl / 2 + 1;
+            if (hp < 1)
+                return '^'; // return 'killer' for RIP
+        }
+        else
+        {
+            mvprintw(0, 0, " You've stepped into a trap... you are confused!");
+            strncpy(state, "conf\0", 5);
+        }
+    }
+
+    return 0;
+}
+
 int monster_turn(int cols, char (* map)[cols])
 {
     int dist_y, dist_x;
-    
-    if (turns == 0)
-        return 0;
     
     for (int m = 0; m < 10 + dlvl / 2; m++)
     {
@@ -318,9 +343,6 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
 
 int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
-    if (turns == 0 || c == 0) // to prevent need of double push a button '3' at the beginning
-        return 0;
-    
     int dir_y = py, dir_x = px;
     
     // remap macro for movement
@@ -790,10 +812,15 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     if (turns == 0)
         create_char(c);
-
-    action_result = p_action(c, rows, cols, map, obj); // +battle()
-
-    killer = monster_turn(cols, map);
+    
+    if (turns > 0)
+    {
+        if (c != 0) // to prevent need of double push a button '3' at the beginning
+            action_result = p_action(c, rows, cols, map, obj); // +battle()
+        killer = monster_turn(cols, map);
+        if (killer == 0)
+            killer = check_trap(rows, cols, obj);
+    }
 
     dungeon_gen(rows, cols, map);
 
@@ -851,31 +878,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     // UI line
     mvprintw(rows, 0, " %s    HP: %d   Att: %d   Mana: %d \t\t Dlvl: %d",race, hp, att, mana, dlvl);
-
-    // player steps on a trap
-    if (obj[py][px] == '^')
-    {
-        attron(A_BOLD | COLOR_PAIR(YELLOW));
-        mvprintw(rows, cols - 10, "[Trap]");
-        attroff(A_BOLD | COLOR_PAIR(YELLOW));
-        
-        if (!strcmp(race, "Halfling") && rand() % 2)
-            ;
-        else if (rand() % 2)
-        {
-            mvprintw(0, 0, " You've stepped into a trap... dart hits you!");
-            hp -= dlvl / 2 + 1;
-            if (hp < 1)
-                killer = '^';
-        }
-        else
-        {
-            mvprintw(0, 0, " You've stepped into a trap... you are confused!");
-            strncpy(state, "conf\0", 5);
-        }
-    }
     
-    // process state
+    // process state and update UI line
     if (!strcmp(state, "conf"))
     {
         if (rand() % 3)
