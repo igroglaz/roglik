@@ -788,16 +788,16 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     srand(time(NULL));
     move(0,0); clrtoeol(); // clear 1st line for messages
 
-    if (turns == 0 || c == 'n')
+    if (turns == 0)
         create_char(c);
 
     new_lvl = p_action(c, rows, cols, map, obj); // +battle()
-    
+
     if (turns > 0)
         killer = monster_turn(cols, map);
-    
+
     dungeon_gen(rows, cols, map);
-    
+
     spawn_objects(rows, cols, map, obj, new_lvl);
 
     spawn_creatures(rows, cols, map);
@@ -841,8 +841,9 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
             c = getch();
             if (c == 'n')
             {
-                new_lvl = 1;
-                break;
+                turns = 0;
+                c = 0;
+                return 0;
             }
             else if (c == 27)
                 return c;
@@ -904,25 +905,38 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
             "\n\n\tPress 'n' to start a new game or 'ESC' to exit.", dlvl, m_defeated, turns, att, mana);
             c = getch();
             if (c == 'n')
-                break;
+            {
+               turns = 0;
+               c = 0;
+               return 0;
+            }
             else if (c == 27)
                 return c;
         }
     }
     else
-    // regular player input
         c = getch();
 
+    // new game by demand
+    if (c == 'n')
+    {
+        turns = 0;
+        c = 0;
+        return 0;
+    }
     // exit game (ESC)
-    if (c == 27)
+    else if (c == 27)
         return c;
-    // turn count
-    turns++;
-    lvl_turns++;
+    else
+    {
+        // turn count
+        turns++;
+        lvl_turns++;
     
-    // hunger
-    if (!(turns % 50 - (dlvl * 2)) && hp > 1)
-        hp--;
+        // hunger
+        if (!(turns % 50 - (dlvl * 2)) && hp > 1)
+            hp--;
+    }
 
     return c;
 }
