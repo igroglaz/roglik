@@ -54,7 +54,8 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
             // objects can be visible only on empty floor
             else if (map[y][x] == ' ')
             {
-                if (obj[y][x] == '>' && lvl_turns > 9)
+                if (obj[y][x] == '>' && (lvl_turns > 9 + dlvl ||
+                   ((y > py - 5 && x > px - 5) && (y < py + 5 && x < px + 5))))
                 {
                     attron(A_BOLD);
                     mvaddch(y,x,'>');
