@@ -328,7 +328,7 @@ int battle(int cols, char (* map)[cols], int dir_y, int dir_x)
                 // gain player lvl
 
                 // 1st lvl hardcoded
-                if (att == 1 && (!(rand() % 3) || m_defeated > 2))
+                if (dlvl == 1 && (!(rand() % 3) || m_defeated > 2) && m_defeated < 4)
                 {
                     att++;
                     mana++;
