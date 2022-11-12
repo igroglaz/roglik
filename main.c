@@ -546,7 +546,7 @@ int spawn_creatures(int rows, int cols, char (* map)[cols])
             dist_y = abs(py - sy);
             dist_x = abs(px - sx);
             
-            if (map[py][px] == ' ' && dist_y > 7 && dist_x > 7)
+            if (map[py][px] == ' ' && dist_y > 7 + dlvl / 2 && dist_x > 7 + dlvl / 2)
                 break;
         }
         while (1);
