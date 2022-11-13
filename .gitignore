@@ -1,0 +1,6 @@
+
+*.o
+*.depend
+*.layout
+.codeblocks/bin/*
+.codeblocks/obj/*
