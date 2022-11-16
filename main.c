@@ -1,4 +1,4 @@
-#include <curses.h>
+#include <ncurses.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
@@ -483,7 +483,7 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     return 0;
 }
 
-int spawn_creatures(int rows, int cols, char (* map)[cols])
+int spawn_t(int rows, int cols, char (* map)[cols])
 {
     if (!t_placed) // aka: t_placed == 0
     {
@@ -497,7 +497,7 @@ int spawn_creatures(int rows, int cols, char (* map)[cols])
                 my = rand() % rows;
                 mx = rand() % cols;
             }
-            while (map[my][mx] != ' ');
+            while (map[my][mx] != ' ' && (my != py && mx != px));
             
             monster[m].y = my;
             monster[m].x = mx;
@@ -532,7 +532,12 @@ int spawn_creatures(int rows, int cols, char (* map)[cols])
 
         t_placed = 1;
     }
+    
+    return 0;
+}
 
+int spawn_p(int rows, int cols, char (* map)[cols])
+{
     if (!p_placed)
     {
         int dist_x;
@@ -840,7 +845,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     spawn_objects(rows, cols, map, obj);
 
-    spawn_creatures(rows, cols, map);
+    spawn_p(rows, cols, map);
+    spawn_t(rows, cols, map);
 
     if (turns > 0)
     {
@@ -865,7 +871,8 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         lvl_turns = 0;
         dungeon_gen(rows, cols, map);
         spawn_objects(rows, cols, map, obj);
-        spawn_creatures(rows, cols, map);
+        spawn_p(rows, cols, map);
+        spawn_t(rows, cols, map);
         dungeon_draw(rows, cols, map, obj);
     }
     // teleport
