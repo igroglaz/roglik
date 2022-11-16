@@ -536,12 +536,12 @@ int spawn_t(int rows, int cols, char (* map)[cols])
     return 0;
 }
 
-int spawn_p(int rows, int cols, char (* map)[cols])
+int spawn_p(int rows, int cols, char (* map)[cols], char (* obj)[cols])
 {
     if (!p_placed)
     {
-        int dist_x;
         int dist_y;
+        int dist_x;
         
         do
         {
@@ -552,7 +552,7 @@ int spawn_p(int rows, int cols, char (* map)[cols])
             dist_y = abs(py - sy);
             dist_x = abs(px - sx);
             
-            if (map[py][px] == ' ' && dist_y > 7 + dlvl / 2 && dist_x > 7 + dlvl / 2)
+            if (map[py][px] == ' ' && obj[py][px] == ' ' && (dist_y > 7 + dlvl / 2 || dist_x > 7 + dlvl / 2))
                 break;
         }
         while (1);
@@ -571,7 +571,7 @@ int spawn_objects(int rows, int cols, char (* map)[cols], char (* obj)[cols])
         for (int y = 0; y <= rows; y++)
         {
             for (int x = 0; x <= cols; x++)
-            {              
+            {
                 obj[y][x] = ' ';
             }
         }
@@ -845,14 +845,16 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
 
     spawn_objects(rows, cols, map, obj);
 
-    spawn_p(rows, cols, map);
+    spawn_p(rows, cols, map, obj);
     spawn_t(rows, cols, map);
 
     if (turns > 0)
     {
         if (c != 0) // to prevent need of double push a button '3' at the beginning
+        {
             action_result = p_action(c, rows, cols, map, obj); // +battle()
-        killer = monster_turn(cols, map);
+            killer = monster_turn(cols, map);
+        }
         if (hp > 0)
             killer = check_trap(rows, cols, obj);
         else
@@ -871,7 +873,7 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
         lvl_turns = 0;
         dungeon_gen(rows, cols, map);
         spawn_objects(rows, cols, map, obj);
-        spawn_p(rows, cols, map);
+        spawn_p(rows, cols, map, obj);
         spawn_t(rows, cols, map);
         dungeon_draw(rows, cols, map, obj);
     }
