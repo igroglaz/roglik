@@ -735,7 +735,8 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
 
                 for (path_y = r_old_center_y; path_y != r_center_y; )
                 {
-                    map[path_y][r_old_center_x] = ' ';
+                    if (map[path_y][r_old_center_x] != '%')
+                        map[path_y][r_old_center_x] = ' ';
                     
                     if (r_old_center_y < r_center_y)
                         path_y++;
@@ -743,14 +744,15 @@ int dungeon_gen(int rows, int cols, char (* map)[cols])
                         path_y--;
                 }
                 
-                for (int x = r_old_center_x; x != r_center_x; )
+                for (int path_x = r_old_center_x; path_x != r_center_x; )
                 {
-                    map[path_y][x] = ' ';
+                    if (map[path_y][path_x] != '%')
+                        map[path_y][path_x] = ' ';
                     
                     if (r_old_center_x < r_center_x)
-                        x++;
+                        path_x++;
                     else if (r_old_center_x > r_center_x)
-                        x--;
+                        path_x--;
                 }
             }
         }
