@@ -503,7 +503,7 @@ int spawn_t(int rows, int cols, char (* map)[cols])
                 my = rand() % rows;
                 mx = rand() % cols;
             }
-            while (map[my][mx] != ' ' || (my != py && mx != px));
+            while (map[my][mx] != ' ' || (my == py && mx == px));
             
             monster[m].y = my;
             monster[m].x = mx;
