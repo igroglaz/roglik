@@ -4,12 +4,14 @@
 #include <stdbool.h>
 #include <string.h> // strcmp()
 
+#define BLACK 0
 #define RED 1
 #define GREEN 2
 #define YELLOW 3
 #define BLUE 4
 #define MAGENTA 5
 #define CYAN 6
+#define WHITE 7
 
 int py, px; // @ coords
 int sy, sx; // > coords
@@ -73,7 +75,11 @@ int dungeon_draw(int rows, int cols, char (* map)[cols], char (* obj)[cols])
                     mvaddch(y,x,' ');
             }
             else if (map[y][x] == '%' && y != 0)
+            {
+                attron(A_DIM | COLOR_PAIR(WHITE));
                 mvaddch(y,x,'%');
+                attroff(A_DIM | COLOR_PAIR(WHITE));
+            }
             else if (map[y][x] == '#')
                 mvaddch(y,x,'#');
             else if (map[y][x] == '~')
@@ -1033,12 +1039,15 @@ int main(void)
     start_color();
     use_default_colors();
 
+    init_pair(BLACK, COLOR_BLACK, COLOR_WHITE);
     init_pair(RED, COLOR_RED, COLOR_BLACK);
     init_pair(GREEN, COLOR_GREEN, COLOR_BLACK);
     init_pair(YELLOW, COLOR_YELLOW, COLOR_BLACK);
     init_pair(BLUE, COLOR_BLUE, COLOR_BLACK);
     init_pair(MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
     init_pair(CYAN, COLOR_CYAN, COLOR_BLACK);
+    init_pair(WHITE, COLOR_WHITE, COLOR_WHITE);
+
     
     keypad(stdscr, 1); // allow ARROWS, F1-F12
     
