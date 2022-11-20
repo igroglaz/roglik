@@ -421,16 +421,19 @@ int p_action(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     // teleport
     else if (mana > 0 && (c == '1' || c == 'q' || c == 't'))
     {
-        mana--;
-        if (!strcmp(race, "Elf") && rand() % 2)
-            mana++;
-
-        do
+        if (dlvl < 13)
         {
-            py = rand() % rows;
-            px = rand() % cols;
+            mana--;
+            if (!strcmp(race, "Elf") && rand() % 2)
+                mana++;
+
+            do
+            {
+                py = rand() % rows;
+                px = rand() % cols;
+            }
+            while (map[py][px] != ' ' && obj[py][px] == ' ');
         }
-        while (map[py][px] != ' ' && obj[py][px] == ' ');
 
         return 2; // tp
     }
@@ -887,7 +890,12 @@ int game_loop(int c, int rows, int cols, char (* map)[cols], char (* obj)[cols])
     }
     // teleport
     else if (action_result == 2)
-        mvprintw(0, 0, " You teleported away.");
+    {
+        if (dlvl < 13)
+            mvprintw(0, 0, " You teleported away.");
+        else
+            mvprintw(0, 0, " Anti-magic field prevents teleport.");
+    }
     // win
     else if (action_result == 3)
     {
